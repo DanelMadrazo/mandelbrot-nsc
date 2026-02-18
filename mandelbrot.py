@@ -4,19 +4,24 @@ Author : [ Danel Madrazo ]
 Course : Numerical Scientific Computing 2026
 """
 import numpy as np
-x = -0.1
-y = 0.1
+xmin, xmax, ymin, ymax = -2, 1, -1.5, 1.5
+res = 100
 
-c = x + 1j * y
+x = np.linspace(xmin, xmax, res)
+y = np.linspace(ymin, ymax, res)
 
-z = np.zeros(100, dtype=complex)
-for n in range(99):
-    z[n+1] = z[n]**2 + c
-    
-    if abs(z[n+1]) > 2:
-        print(f"point scapes! iteration number:{n+1}")
-        break 
-else: 
-    print(f"Point didnt scape, iteration number: {n+1}")
+def mandelbrot_point(x, y, max_iter = 100):
+    c = x + 1j * y
+    z = 0j
+    for n in range(max_iter):
+        z = z**2 + c 
+        if abs(z) > 2:
+            break    
+    return n
 
-            
+iteration_num = np.zeros((res, res))
+
+for i in range(res):
+    for j in range (res):
+        iteration_num[i, j] = mandelbrot_point(x[j], y[j])
+          
