@@ -31,12 +31,15 @@ def compute_mandelbrot(xmin, xmax, ymin, ymax, x_res, y_res, max_iter = 100):
     return iteration_num
 
 xmin, xmax, ymin, ymax = -2, 1, -1.5, 1.5
-res_x, res_y = 1024, 1024
+res_x, res_y = 2048, 2048
 
 #STEP 4
 start = time.time()
 result = compute_mandelbrot(xmin, xmax, ymin, ymax, res_x, res_y)
 elapsed = time.time() - start
+
+#1024x1024 resolution takes around 4 seconds
+#2048x2048 resolution takes around 17 seconds
 
 print(f"Computation took {elapsed:.3f} seconds")
 
