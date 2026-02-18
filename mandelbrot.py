@@ -4,8 +4,12 @@ Author : [ Danel Madrazo ]
 Course : Numerical Scientific Computing 2026
 """
 import numpy as np
+import time
+import matplotlib as plt
+
+start = time.time()
 xmin, xmax, ymin, ymax = -2, 1, -1.5, 1.5
-res = 100
+res = 1024
 
 x = np.linspace(xmin, xmax, res)
 y = np.linspace(ymin, ymax, res)
@@ -25,3 +29,5 @@ for i in range(res):
     for j in range (res):
         iteration_num[i, j] = mandelbrot_point(x[j], y[j])
           
+elapsed = time.time() - start
+print(elapsed)
