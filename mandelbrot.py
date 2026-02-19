@@ -39,6 +39,14 @@ def compute_mandelbrot_numpy(C, max_iter = 100):
         M[mask] += 1
     return M
 
+#L2 MILESTONE 3 
+def row_sums(N,A):
+    for i in range(N): s = np.sum(A[i, :])
+    return s
+def column_sums(N,A):
+    for j in range(N): s = np.sum(A[:, j])
+    return s   
+
 #Lecture 2, new time measurement function
 def benchmark ( func , * args , n_runs =3) :
     """ Time func , return median of n_runs . """
@@ -91,4 +99,19 @@ plt.title("Mandelbrot")
 plt.xlabel("Real (Re)")
 plt.ylabel("Imaginary (Im)")
 plt.show()
-        
+
+#MILESTONE 3
+N = 10000
+A = np.random.rand(N, N)
+t_raw, s_raw = benchmark(row_sums, N, A)
+t_column, s_column = benchmark(column_sums, N, A)
+print(f"sum of raws took {t_raw:.4f} seconds")
+print(f"sum of columns took {t_column:.4f} seconds")
+
+#With 'asfortranarray' the raw which was way faster the previous time is now slower
+A_f = np.asfortranarray(A)
+t_raw, s_raw = benchmark(row_sums, N, A_f)
+t_column, s_column = benchmark(column_sums, N, A_f)
+print(f"sum of raws took {t_raw:.4f} seconds with 'asfortanarray' ")
+print(f"sum of columns took {t_column:.4f} seconds 'asfortanarray' ")
+
