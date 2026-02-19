@@ -56,8 +56,8 @@ def benchmark ( func , * args , n_runs =3) :
         result = func (* args)
         times.append(time.perf_counter() - t0 )
     median_t = statistics.median(times)
-    print (f" Median : { median_t:.4f}s "
-    f"( min ={ min( times ):.4f}, max ={ max( times ):.4f})")
+    #print (f" Median : { median_t:.4f}s "
+    #f"( min ={ min( times ):.4f}, max ={ max( times ):.4f})")
     return median_t , result
 
 xmin, xmax, ymin, ymax = -2, 1, -1.5, 1.5
@@ -114,4 +114,23 @@ t_raw, s_raw = benchmark(row_sums, N, A_f)
 t_column, s_column = benchmark(column_sums, N, A_f)
 print(f"sum of raws took {t_raw:.4f} seconds with 'asfortanarray' ")
 print(f"sum of columns took {t_column:.4f} seconds 'asfortanarray' ")
+
+#MILESTONE 4
+grid_size = [256, 512, 1024, 2048]
+xmin, xmax, ymin, ymax = -2, 1, -1.5, 1.5
+t = [0] * len(grid_size)
+for i in range(len(grid_size)):
+    x = np . linspace ( xmin , xmax, grid_size[i]) # 1024 x- values
+    y = np . linspace ( ymin , ymax , grid_size[i]) # 1024 y- values
+    X , Y = np . meshgrid (x , y) # 2D grids
+    C = X + 1j* Y # Complex grid
+    t[i], result = benchmark(compute_mandelbrot_numpy, C, 100)
+    
+plt.figure()
+plt.plot(grid_size, t)
+plt.title('Problem Size Scaling')
+plt.xlabel('grid_scale')
+plt.ylabel('time')
+
+    
 
