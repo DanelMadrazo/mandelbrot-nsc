@@ -17,18 +17,14 @@ def mandelbrot_point(c, max_iter = 100):
     return max_iter
 
 #STEP 3
-def compute_mandelbrot(xmin, xmax, ymin, ymax, x_res, y_res, max_iter = 100):
-    x = np.linspace(xmin, xmax, x_res)
-    y = np.linspace(ymin, ymax, y_res)
-    
-    iteration_num = np.zeros((y_res, x_res))
-    
-    for i in range(y_res):
-        for j in range(x_res):
-            c = complex(x[j], y[i])
-            n = mandelbrot_point(c, max_iter)
-            iteration_num[i, j] = n
-    return iteration_num
+def compute_mandelbrot(C, max_iter = 100):
+    Z = np.zeros_like(C)
+    M = np.zeros(C.shape, dtype=int)
+    for i in range(max_iter):  
+        mask = np.abs(Z) <= 2
+        Z[mask] = Z[mask]**2 + C[mask]
+        M[mask] += 1
+    return M
 
 xmin, xmax, ymin, ymax = -2, 1, -1.5, 1.5
 res_x, res_y = 1024, 1024
@@ -62,7 +58,7 @@ def benchmark ( func , * args , n_runs =3) :
     print (f" Median : { median_t:.4f}s "
     f"( min ={ min( times ):.4f}, max ={ max( times ):.4f})")
     return median_t , result
-t , M = benchmark (compute_mandelbrot, xmin, xmax, ymin , ymax , res_x , res_y , 100)
+t , M = benchmark (compute_mandelbrot, C, 100)
 
 #STEP 5
 plt.figure()
