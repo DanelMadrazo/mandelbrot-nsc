@@ -59,6 +59,30 @@ def mandelbrot_naive_numba(xmin, xmax, ymin, ymax, x_res, y_res, max_iter = 100)
                 n += 1
             result[i, j] = n
     return result
+@njit
+def mandelbrot_point_numba (c , max_iter =100) :
+    z = 0j
+    for n in range (max_iter):
+        if z.real * z.real + z.imag * z.imag >4.0:
+            return n
+        z = z *z + c
+    return max_iter
+
+def mandelbrot_hybrid (xmin, xmax, ymin, ymax, x_res, y_res, max_iter = 100):
+    # outer loops still in Python
+    x = np.linspace(xmin, xmax, x_res)
+    y = np.linspace(ymin, ymax, y_res)
+
+    iteration_num = np.zeros((y_res, x_res))
+    
+    for i in range(y_res):
+        for j in range(x_res):
+            c = complex(x[j], y[i])
+            n = mandelbrot_point_numba(c, max_iter)
+            iteration_num[i, j] = n
+    return iteration_num
+
+
 #L2 MILESTONE 3 
 def row_sums(N,A):
     for i in range(N): s = np.sum(A[i, :])
@@ -100,9 +124,6 @@ print(f"Computation with naive took {t_naive:.4f} seconds")
 t_numpy , numpy_result = benchmark(compute_mandelbrot_numpy, C, 100)
 print(f"Computation with numpy took {t_numpy:.4f} seconds")
 
-#NUMBA (L3 MILESTONE3)
-t_naive_numba, naive_numba_result  = benchmark(mandelbrot_naive_numba, xmin, xmax, ymin, ymax, res_x, res_y, 100)
-print(f"Computation with numba took {t_naive_numba:.4f} seconds")
 
 if np.allclose ( naive_result , numpy_result ):
     print (" Results match !")
@@ -165,3 +186,15 @@ plt.ylabel('time')
 #     stats.sort_stats('cumulative')
 #     stats.print_stats(10)
 
+_ = mandelbrot_hybrid ( -2 , 1, -1.5 , 1.5 , 64 , 64)
+_ = mandelbrot_naive_numba ( -2 , 1, -1.5 , 1.5 , 64 , 64)
+
+#NUMBA (L3 MILESTONE3)
+t_naive_numba, naive_numba_result  = benchmark(mandelbrot_naive_numba, xmin, xmax, ymin, ymax, res_x, res_y, 100)
+t_hybrid, hybrid_result  = benchmark(mandelbrot_hybrid, xmin, xmax, ymin, ymax, res_x, res_y, 100)
+
+
+
+print (f" Hybrid: { t_hybrid :.3f}s")
+print (f" Fully compiled: { t_naive_numba:.3f}s")
+print (f" Ratio: { t_hybrid / t_naive_numba:.1f}x")
