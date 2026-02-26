@@ -7,9 +7,9 @@ import numpy as np
 import time , statistics
 import matplotlib.pyplot as plt
 #import cProfile , pstats
+from numba import njit
 
 #STEP 2
-@profile 
 def mandelbrot_point(c, max_iter = 100):
     z = 0j
     for n in range(max_iter):
@@ -18,7 +18,6 @@ def mandelbrot_point(c, max_iter = 100):
             return n    
     return max_iter
 #STEP 3
-@profile
 def compute_mandelbrot_naive(xmin, xmax, ymin, ymax, x_res, y_res, max_iter = 100):
     x = np.linspace(xmin, xmax, x_res)
     y = np.linspace(ymin, ymax, y_res)
@@ -41,7 +40,25 @@ def compute_mandelbrot_numpy(C, max_iter = 100):
         Z[mask] = Z[mask]**2 + C[mask]
         M[mask] += 1
     return M
-
+#L3 MILESTONE 3
+@njit
+def mandelbrot_naive_numba(xmin, xmax, ymin, ymax, x_res, y_res, max_iter = 100):
+    x = np.linspace(xmin, xmax, x_res)
+    y = np.linspace(ymin, ymax, y_res)
+    
+    # OJO: y_res va primero para el número de filas (altura)
+    result = np.zeros((y_res, x_res), dtype=np.int32) 
+    
+    for i in range(y_res):     # OJO: i recorre el eje Y (filas)
+        for j in range(x_res): # OJO: j recorre el eje X (columnas)
+            c = x[j] + 1j * y[i]
+            z = 0j
+            n = 0
+            while n < max_iter and z.real * z.real + z.imag * z.imag <= 4.0:
+                z = z*z + c 
+                n += 1
+            result[i, j] = n
+    return result
 #L2 MILESTONE 3 
 def row_sums(N,A):
     for i in range(N): s = np.sum(A[i, :])
@@ -82,6 +99,10 @@ print(f"Computation with naive took {t_naive:.4f} seconds")
 
 t_numpy , numpy_result = benchmark(compute_mandelbrot_numpy, C, 100)
 print(f"Computation with numpy took {t_numpy:.4f} seconds")
+
+#NUMBA (L3 MILESTONE3)
+t_naive_numba, naive_numba_result  = benchmark(mandelbrot_naive_numba, xmin, xmax, ymin, ymax, res_x, res_y, 100)
+print(f"Computation with numba took {t_naive_numba:.4f} seconds")
 
 if np.allclose ( naive_result , numpy_result ):
     print (" Results match !")
@@ -143,3 +164,4 @@ plt.ylabel('time')
 #     stats = pstats.Stats(name)
 #     stats.sort_stats('cumulative')
 #     stats.print_stats(10)
+
