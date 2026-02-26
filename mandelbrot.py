@@ -6,6 +6,7 @@ Course : Numerical Scientific Computing 2026
 import numpy as np
 import time , statistics
 import matplotlib.pyplot as plt
+import cProfile , pstats
 
 #STEP 2
 def mandelbrot_point(c, max_iter = 100):
@@ -72,15 +73,13 @@ print (f" Type : {C. dtype }") # complex128
 
 #STEP 4
 t_naive, naive_result  = benchmark(compute_mandelbrot_naive, xmin, xmax, ymin, ymax, res_x, res_y, 100)
-
+print(f"Computation with naive took {t_naive:.4f} seconds")
 
 #1024x1024 resolution takes around 4 seconds
 #2048x2048 resolution takes around 17 seconds
 
-print(f"Computation with naive took {t_naive:.3f} seconds")
-
 t_numpy , numpy_result = benchmark(compute_mandelbrot_numpy, C, 100)
-
+print(f"Computation with numpy took {t_numpy:.4f} seconds")
 
 if np.allclose ( naive_result , numpy_result ):
     print (" Results match !")
@@ -132,5 +131,13 @@ plt.title('Problem Size Scaling')
 plt.xlabel('grid_scale')
 plt.ylabel('time')
 
-    
+#Lecture 3
+##MILESTONE 1
+cProfile.run('compute_mandelbrot_naive( xmin, xmax, ymin, ymax, 1024 , 1024)', 'naive_profile.prof')
 
+cProfile.run('compute_mandelbrot_numpy(C)', 'numpy_profile.prof')
+             
+for name in ('naive_profile.prof', 'numpy_profile.prof'):
+    stats = pstats.Stats(name)
+    stats.sort_stats('cumulative')
+    stats.print_stats(10)
