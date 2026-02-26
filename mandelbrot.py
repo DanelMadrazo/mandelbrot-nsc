@@ -6,9 +6,10 @@ Course : Numerical Scientific Computing 2026
 import numpy as np
 import time , statistics
 import matplotlib.pyplot as plt
-import cProfile , pstats
+#import cProfile , pstats
 
 #STEP 2
+@profile 
 def mandelbrot_point(c, max_iter = 100):
     z = 0j
     for n in range(max_iter):
@@ -17,6 +18,7 @@ def mandelbrot_point(c, max_iter = 100):
             return n    
     return max_iter
 #STEP 3
+@profile
 def compute_mandelbrot_naive(xmin, xmax, ymin, ymax, x_res, y_res, max_iter = 100):
     x = np.linspace(xmin, xmax, x_res)
     y = np.linspace(ymin, ymax, y_res)
@@ -133,11 +135,11 @@ plt.ylabel('time')
 
 #Lecture 3
 ##MILESTONE 1
-cProfile.run('compute_mandelbrot_naive( xmin, xmax, ymin, ymax, 1024 , 1024)', 'naive_profile.prof')
+# cProfile.run('compute_mandelbrot_naive( xmin, xmax, ymin, ymax, 1024 , 1024)', 'naive_profile.prof')
 
-cProfile.run('compute_mandelbrot_numpy(C)', 'numpy_profile.prof')
+# cProfile.run('compute_mandelbrot_numpy(C)', 'numpy_profile.prof')
              
-for name in ('naive_profile.prof', 'numpy_profile.prof'):
-    stats = pstats.Stats(name)
-    stats.sort_stats('cumulative')
-    stats.print_stats(10)
+# for name in ('naive_profile.prof', 'numpy_profile.prof'):
+#     stats = pstats.Stats(name)
+#     stats.sort_stats('cumulative')
+#     stats.print_stats(10)
