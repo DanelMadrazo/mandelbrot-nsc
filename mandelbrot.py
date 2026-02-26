@@ -91,6 +91,17 @@ def bench (fn , * args , runs =5) :
         times . append ( time . perf_counter () - t0 )
     return statistics . median ( times )
 
+#L3 MILESTONE 4
+@njit
+def mandelbrot_numba_typed(xmin, xmax, ymin, ymax, width, height, max_iter =100, dtype = np.float64):
+    x = np . linspace ( xmin , xmax , width ). astype ( dtype )
+    y = np . linspace ( ymin , ymax , height ) . astype ( dtype )
+    result = np . zeros (( height , width ) , dtype = np . int32 )
+    for i in range ( height ):
+        for j in range ( width ):
+            c = x [j] + 1j * y[ i]
+            result [i , j ] = mandelbrot_point_numba (c , max_iter )
+    return result
 
 #L2 MILESTONE 3 
 def row_sums(N,A):
@@ -209,3 +220,11 @@ t_numba = bench (mandelbrot_naive_numba , * args )
 print (f" Naive : { t_naive :.3f}s")
 print (f" NumPy : { t_numpy :.3f}s ({ t_naive / t_numpy :.1f}x)")
 print (f" Numba : { t_numba :.3f}s ({ t_naive / t_numba :.1f}x)")
+
+#L3 MILESTONE4
+for dtype in [np.float32, np.float64]:
+    t0 = time . perf_counter ()
+    mandelbrot_numba_typed(-2, 1, -1.5, 1.5, 1024, 1024, dtype = dtype)
+    print (f"{dtype.__name__}: { time.perf_counter()-t0:.3f}s")
+    
+    
