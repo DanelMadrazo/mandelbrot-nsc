@@ -9,6 +9,7 @@ import matplotlib.pyplot as plt
 #import cProfile , pstats
 from numba import njit
 
+
 #STEP 2
 def mandelbrot_point(c, max_iter = 100):
     z = 0j
@@ -81,6 +82,14 @@ def mandelbrot_hybrid (xmin, xmax, ymin, ymax, x_res, y_res, max_iter = 100):
             n = mandelbrot_point_numba(c, max_iter)
             iteration_num[i, j] = n
     return iteration_num
+def bench (fn , * args , runs =5) :
+    fn (* args ) # warm -up
+    times = []
+    for _ in range ( runs ) :
+        t0 = time . perf_counter ()
+        fn (* args )
+        times . append ( time . perf_counter () - t0 )
+    return statistics . median ( times )
 
 
 #L2 MILESTONE 3 
@@ -190,11 +199,13 @@ _ = mandelbrot_hybrid ( -2 , 1, -1.5 , 1.5 , 64 , 64)
 _ = mandelbrot_naive_numba ( -2 , 1, -1.5 , 1.5 , 64 , 64)
 
 #NUMBA (L3 MILESTONE3)
-t_naive_numba, naive_numba_result  = benchmark(mandelbrot_naive_numba, xmin, xmax, ymin, ymax, res_x, res_y, 100)
-t_hybrid, hybrid_result  = benchmark(mandelbrot_hybrid, xmin, xmax, ymin, ymax, res_x, res_y, 100)
+width , height = 1024 , 1024
+args = ( -2 , 1, -1.5 , 1.5 , width , height )
 
+t_naive = bench (compute_mandelbrot_naive , * args )
+t_numpy = bench (compute_mandelbrot_numpy , C, 100)
+t_numba = bench (mandelbrot_naive_numba , * args )
 
-
-print (f" Hybrid: { t_hybrid :.3f}s")
-print (f" Fully compiled: { t_naive_numba:.3f}s")
-print (f" Ratio: { t_hybrid / t_naive_numba:.1f}x")
+print (f" Naive : { t_naive :.3f}s")
+print (f" NumPy : { t_numpy :.3f}s ({ t_naive / t_numpy :.1f}x)")
+print (f" Numba : { t_numba :.3f}s ({ t_naive / t_numba :.1f}x)")
