@@ -6,6 +6,7 @@ Created on Thu Mar  5 14:48:35 2026
 """
 import math, random, time, statistics, os
 from multiprocessing import Pool
+import matplotlib.pyplot as plt
 
 def estimate_pi_serial(num_samples):
     inside_circle = 0
@@ -48,9 +49,12 @@ if __name__ == '__main__':
     max_speedup = 0
     best_p = 1
     
+    workers_list = []
+    speedup_list = []
+    
     print("workers | time (s) | speedup Sp | efficiency Ep (%)")
     print("-" * 55)
-
+    
     for num_proc in range(1, os.cpu_count() + 1):
         times = []
         for _ in range(3):
@@ -63,6 +67,9 @@ if __name__ == '__main__':
         #E3
         speedup = t_serial / t_par
         efficiency = (speedup / num_proc) * 100
+        
+        workers_list.append(num_proc)
+        speedup_list.append(speedup)
         
         print(f"{num_proc:7d} | {t_par:8.3f} | {speedup:10.2f}x | {efficiency:14.0f}%")
         
@@ -78,6 +85,18 @@ if __name__ == '__main__':
     else:
         print("1 Worker was the best, cannot calculate 's'.")
         
+    plt.figure(figsize=(8, 5))
+    plt.plot(workers_list, speedup_list, marker='o', linestyle='-', color='steelblue', label='Measured speedup')
+    plt.plot([1, os.cpu_count()], [1, os.cpu_count()], linestyle='--', color='lightgray', label='Ideal (linear)')
+    plt.axvline(x=os.cpu_count(), linestyle=':', color='gray', alpha=0.5, label=f'Logical cores ({os.cpu_count()})')
     
+    plt.title('Monte Carlo $\pi$ speedup (10,000,000 samples)')
+    plt.xlabel('Number of worker processes')
+    plt.ylabel('Speedup (relative to serial)')
+    plt.xticks(workers_list)
+    plt.grid(True, alpha=0.3)
+    plt.legend()
+    plt.tight_layout()
+    plt.show()
     
 
