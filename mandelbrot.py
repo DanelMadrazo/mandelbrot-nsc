@@ -82,14 +82,14 @@ def mandelbrot_hybrid (xmin, xmax, ymin, ymax, x_res, y_res, max_iter = 100):
             n = mandelbrot_point_numba(c, max_iter)
             iteration_num[i, j] = n
     return iteration_num
-def bench (fn , * args , runs =5) :
-    fn (* args ) # warm -up
+def bench(fn, *args, runs = 5):
+    fn(*args) # warm -up
     times = []
-    for _ in range ( runs ) :
-        t0 = time . perf_counter ()
-        fn (* args )
-        times . append ( time . perf_counter () - t0 )
-    return statistics . median ( times )
+    for _ in range(runs):
+        t0 = time.perf_counter()
+        fn(*args)
+        times.append(time.perf_counter() - t0)
+    return statistics.median(times)
 
 #L3 MILESTONE 4
 @njit
@@ -97,10 +97,10 @@ def mandelbrot_numba_typed(xmin, xmax, ymin, ymax, width, height, max_iter =100,
     x = np . linspace ( xmin , xmax , width ). astype ( dtype )
     y = np . linspace ( ymin , ymax , height ) . astype ( dtype )
     result = np . zeros (( height , width ) , dtype = np . int32 )
-    for i in range ( height ):
-        for j in range ( width ):
+    for i in range(height):
+        for j in range(width):
             c = x [j] + 1j * y[ i]
-            result [i , j ] = mandelbrot_point_numba (c , max_iter )
+            result [i , j ] = mandelbrot_point_numba(c , max_iter )
     return result
 
 #L2 MILESTONE 3 
@@ -112,7 +112,7 @@ def column_sums(N,A):
     return s   
 
 #Lecture 2, new time measurement function
-def benchmark ( func , * args , n_runs =3) :
+def benchmark(func, *args, n_runs =3) :
     """ Time func , return median of n_runs . """
     times = []
     for _ in range ( n_runs ):
@@ -120,19 +120,18 @@ def benchmark ( func , * args , n_runs =3) :
         result = func (* args)
         times.append(time.perf_counter() - t0 )
     median_t = statistics.median(times)
-    #print (f" Median : { median_t:.4f}s "
-    #f"( min ={ min( times ):.4f}, max ={ max( times ):.4f})")
+    #print (f" Median : { median_t:.4f}s "f"( min ={ min( times ):.4f}, max ={ max( times ):.4f})")
     return median_t , result
 
 xmin, xmax, ymin, ymax = -2, 1, -1.5, 1.5
 res_x, res_y = 1024, 1024
 
-x = np . linspace ( xmin , xmax, res_x) # 1024 x- values
-y = np . linspace ( ymin , ymax , res_y) # 1024 y- values
-X , Y = np . meshgrid (x , y) # 2D grids
+x = np.linspace(xmin ,xmax,res_x) # 1024 x- values
+y = np.linspace(ymin ,ymax ,res_y) # 1024 y- values
+X , Y = np.meshgrid(x, y) # 2D grids
 C = X + 1j* Y # Complex grid
-print (f" Shape : {C. shape }") # (1024 , 1024)
-print (f" Type : {C. dtype }") # complex128
+print(f" Shape : {C. shape }") # (1024 , 1024)
+print(f" Type : {C. dtype }") # complex128
 
 #STEP 4
 t_naive, naive_result  = benchmark(compute_mandelbrot_naive, xmin, xmax, ymin, ymax, res_x, res_y, 100)
@@ -145,12 +144,12 @@ t_numpy , numpy_result = benchmark(compute_mandelbrot_numpy, C, 100)
 print(f"Computation with numpy took {t_numpy:.4f} seconds")
 
 
-if np.allclose ( naive_result , numpy_result ):
+if np.allclose(naive_result, numpy_result):
     print (" Results match !")
 else :
     print (" Results differ !")
 # Check where they differ :
-diff = np .abs ( naive_result - numpy_result )
+diff = np.abs(naive_result - numpy_result)
 print (f" Max difference : { diff . max ()}")
 print (f" Different pixels : {( diff > 0). sum ()}")
 
@@ -183,11 +182,11 @@ grid_size = [256, 512, 1024, 2048]
 xmin, xmax, ymin, ymax = -2, 1, -1.5, 1.5
 t = [0] * len(grid_size)
 for i in range(len(grid_size)):
-    x = np . linspace ( xmin , xmax, grid_size[i]) # 1024 x- values
-    y = np . linspace ( ymin , ymax , grid_size[i]) # 1024 y- values
-    X , Y = np . meshgrid (x , y) # 2D grids
-    C = X + 1j* Y # Complex grid
-    t[i], result = benchmark(compute_mandelbrot_numpy, C, 100)
+    x = np.linspace(xmin, xmax, grid_size[i]) # 1024 x- values
+    y = np.linspace(ymin, ymax, grid_size[i]) # 1024 y- values
+    X , Y = np.meshgrid(x, y) # 2D grids
+    c = X + 1j* Y # Complex grid
+    t[i], result = benchmark(compute_mandelbrot_numpy, c, 100)
     
 plt.figure()
 plt.plot(grid_size, t)
@@ -196,26 +195,26 @@ plt.xlabel('grid_scale')
 plt.ylabel('time')
 
 #Lecture 3
-##MILESTONE 1
+# ##MILESTONE 1
 # cProfile.run('compute_mandelbrot_naive( xmin, xmax, ymin, ymax, 1024 , 1024)', 'naive_profile.prof')
 
 # cProfile.run('compute_mandelbrot_numpy(C)', 'numpy_profile.prof')
              
 # for name in ('naive_profile.prof', 'numpy_profile.prof'):
-#     stats = pstats.Stats(name)
-#     stats.sort_stats('cumulative')
-#     stats.print_stats(10)
+#      stats = pstats.Stats(name)
+#      stats.sort_stats('cumulative')
+#      stats.print_stats(10)
 
-_ = mandelbrot_hybrid ( -2 , 1, -1.5 , 1.5 , 64 , 64)
-_ = mandelbrot_naive_numba ( -2 , 1, -1.5 , 1.5 , 64 , 64)
+_ = mandelbrot_hybrid(-2, 1, -1.5, 1.5, 64, 64)
+_ = mandelbrot_naive_numba(-2, 1, -1.5, 1.5, 64, 64)
 
 #NUMBA (L3 MILESTONE3)
-width , height = 1024 , 1024
+width, height = 1024 , 1024
 args = ( -2 , 1, -1.5 , 1.5 , width , height )
 
-t_naive = bench (compute_mandelbrot_naive , * args )
-t_numpy = bench (compute_mandelbrot_numpy , C, 100)
-t_numba = bench (mandelbrot_naive_numba , * args )
+t_naive = bench(compute_mandelbrot_naive , *args )
+t_numpy = bench(compute_mandelbrot_numpy , C, 100)
+t_numba = bench(mandelbrot_naive_numba , *args )
 
 print (f" Naive : { t_naive :.3f}s")
 print (f" NumPy : { t_numpy :.3f}s ({ t_naive / t_numpy :.1f}x)")
@@ -223,19 +222,19 @@ print (f" Numba : { t_numba :.3f}s ({ t_naive / t_numba :.1f}x)")
 
 #L3 MILESTONE4
 for dtype in [np.float32, np.float64]:
-    t0 = time . perf_counter ()
+    t0 = time.perf_counter()
     mandelbrot_numba_typed(-2, 1, -1.5, 1.5, 1024, 1024, dtype = dtype)
     print (f"{dtype.__name__}: { time.perf_counter()-t0:.3f}s")
     
-r32 = mandelbrot_numba_typed ( -2 , 1 , -1.5 , 1.5 , 1024 , 1024 , dtype = np . float32 )
-r64 = mandelbrot_numba_typed ( -2 , 1 , -1.5 , 1.5 , 1024 , 1024 , dtype = np . float64 )
+r32 = mandelbrot_numba_typed(-2, 1, -1.5, 1.5, 1024, 1024, dtype = np.float32)
+r64 = mandelbrot_numba_typed(-2, 1, -1.5, 1.5, 1024, 1024, dtype = np.float64)
 
-fig , axes = plt . subplots (1 , 2, figsize =(12 , 4) )
-for ax , result , title in zip ( axes , [r32 , r64 ] ,['float32', 'float64 ( ref )']):
+fig , axes = plt.subplots(1, 2, figsize =(12 , 4))
+for ax , result , title in zip(axes, [r32,r64], ['float32', 'float64 ( ref )']):
     ax.imshow(result, cmap ='hot')
     ax.set_title(title); 
     ax.axis ('off')
     
-plt . savefig ('precision_comparison.png', dpi =150)
+#plt.savefig('precision_comparison.png', dpi = 150)
 
 print (f" Max diff float32 vs float64 : {np.abs(r32 - r64).max()}")
