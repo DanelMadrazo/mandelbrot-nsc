@@ -54,26 +54,56 @@ def mandelbrot_parallel(N, x_min, x_max, y_min, y_max, max_iter=100, n_workers=4
 if __name__ == '__main__':
     N, max_iter = 1024, 100
     x_min, x_max, y_min, y_max = -2, 1, -1.5, 1.5
-        
+    
+    # 1. Warm-up 
+    _ = mandelbrot_serial(N, x_min, x_max, y_min, y_max, max_iter)
+    
+    # Serial baseline (Numba already warm after M1 warm-up)
+    times_serial = []
+    for _ in range(3):
+        t0 = time.perf_counter()
+        mandelbrot_serial(N, x_min, x_max, y_min, y_max, max_iter)
+        times_serial.append(time.perf_counter() - t0)
+    t_serial = statistics.median(times_serial)
+    
+    print(f"Serial (baseline): {t_serial:.4f} seconds\n")
+    print("--- Parallel Benchmark (M3) ---")
+    print("workers | time (s) | speedup Sp | efficiency Ep (%)")
+    print("-" * 55)
+    
+    max_speedup = 0
+    best_p = 1
+    
+    for n_workers in range(1, os.cpu_count() + 1):
 
-    t0_serial = time.perf_counter()
-    result_serial = mandelbrot_serial(N, x_min, x_max, y_min, y_max, max_iter)
-    t1_serial = time.perf_counter()
+        chunk_size = max(1, N // n_workers)
+        chunks, row = [], 0
+        while row < N:
+            end = min(row + chunk_size, N)
+            chunks.append((row, end, N, x_min, x_max, y_min, y_max, max_iter))
+            row = end
+            
+        with Pool(processes=n_workers) as pool:
+            pool.map(_worker, chunks) # warm-up: Numba JIT in all workers
+            times = []
+            for _ in range(3):
+                t0 = time.perf_counter()
+                np.vstack(pool.map(_worker, chunks))
+                times.append(time.perf_counter() - t0)
+        t_par = statistics.median(times)
+        speedup = t_serial / t_par
+        print(f"{n_workers:2d} workers: {t_par:.3f}s, speedup={speedup:.2f}x, eff={speedup/n_workers*100:.0f}%")
+        
+        if speedup > max_speedup:
+            max_speedup = speedup
+            best_p = n_workers
+            
+    print("-" * 55)
+    print("\n=== Amdahl Analisis ===")
+    print(f"Maximum speedup (Sp*) = {max_speedup:.2f}x at p* = {best_p} workers")
     
-    print(f"serial done in {t1_serial - t0_serial:.3f} seconds.")
+    if best_p > 1:
+        # back-solve implied serial fraction (s)
+        s = (1 / max_speedup - 1 / best_p) / (1 - 1 / best_p)
+        print(f"Implied serial fraction (s) = {s * 100:.2f}%")
     
-    plt.imshow(result_serial, cmap='hot')
-    plt.show()
-    
-    t0_parallel = time.perf_counter()
-    result_parallel = mandelbrot_parallel(N, x_min, x_max, y_min, y_max, n_workers=4)
-    t1_parallel = time.perf_counter()
-    
-    print(f"parallel done in {t1_parallel - t0_parallel:.3f} seconds.")
-    plt.imshow(result_parallel, cmap='hot')
-    plt.show()
-    
-    if np.array_equal(result_serial, result_parallel):
-        print("Yes, parallel result is exactly the same as serial")
-    else:
-        print("No, there is some differences between serial and parallel results")
