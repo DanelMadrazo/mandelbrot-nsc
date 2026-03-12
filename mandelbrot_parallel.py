@@ -14,10 +14,11 @@ import matplotlib.pyplot as plt
 def mandelbrot_pixel(c_real, c_imag, max_iter):
     z_real = z_imag = 0.0
     for i in range(max_iter):
-        z_sq = z_real*z_real + z_imag*z_imag
-        if z_sq > 4.0: return i
+        zr2 = z_real*z_real
+        zi2 = z_imag*z_imag
+        if zr2 + zi2 > 4.0: return i
         z_imag = 2.0*z_real*z_imag + c_imag
-        z_real = z_real*z_real - z_imag*z_imag + c_real
+        z_real = zr2 - zi2 + c_real
     return max_iter
 
 @njit
@@ -53,6 +54,7 @@ def mandelbrot_parallel(N, x_min, x_max, y_min, y_max, max_iter=100, n_workers=4
 if __name__ == '__main__':
     N, max_iter = 1024, 100
     x_min, x_max, y_min, y_max = -2, 1, -1.5, 1.5
+        
 
     t0_serial = time.perf_counter()
     result_serial = mandelbrot_serial(N, x_min, x_max, y_min, y_max, max_iter)
