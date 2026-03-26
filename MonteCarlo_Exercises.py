@@ -7,6 +7,7 @@ Created on Thu Mar  5 14:48:35 2026
 import math, random, time, statistics, os
 from multiprocessing import Pool
 import matplotlib.pyplot as plt
+from functools import reduce
 
 def estimate_pi_serial(num_samples):
     inside_circle = 0
@@ -51,6 +52,8 @@ def test_granularity(total_work, chunk_size, n_proc):
             results = pool.map(monte_carlo_chunk, tasks)
     return time.perf_counter() - t0, 4 * sum(results) / total_work
 
+def subtract_seven(x):
+    return x - 7
 
 if __name__ == '__main__':
     num_samples = 10000000
@@ -118,7 +121,7 @@ if __name__ == '__main__':
     plt.show()
     
     
-    # EXERCISE1 - Parallel COmputing part 2 - Chunk Size Investigation
+    # EXERCISE1 - Parallel Computing part 2 - Chunk Size Investigation
     print('CHUNK SIZE INVESTIGATION:')
     total_work = 1_000_000
     n_proc = os.cpu_count() // 2
@@ -128,4 +131,26 @@ if __name__ == '__main__':
         t_ser, _ = test_granularity(total_work, L, n_proc=1)
         t_par, pi = test_granularity(total_work, L, n_proc=n_proc)
         print(f"{L:12d} | {t_ser:12.4f} | {t_par:12.4f} pi={pi:.4f}")
+        
+        
+    #EXERCISE2 - Parallel Computing part 2 - Map-Filter-Reduce
+    N = 1_000_000
+    data = [random.randint(10, 100) for _ in range(N)]
+    
+    #Part 1
+    t0 = time.perf_counter()
+    result_ser = reduce(lambda a, b: a + b, filter(lambda x: x % 2 == 1, map(subtract_seven, data)))
+    t_serial = time.perf_counter() - t0
+    
+    #Part 2
+    t0 = time.perf_counter()
+    with Pool() as pool:
+        mapped = pool.map(subtract_seven, data)
+    result_par = reduce(lambda a, b: a + b, filter(lambda x: x % 2 == 1, mapped))
+    t_parallel = time.perf_counter() - t0
+    print(f"Serial: {t_serial:.4f}s result={result_ser}")
+    print(f"Parallel: {t_parallel:.4f}s result={result_par}")
+    print(f"Speedup: {t_serial / t_parallel:.2f}x")
+
+
     
