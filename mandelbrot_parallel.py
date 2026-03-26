@@ -57,7 +57,35 @@ def mandelbrot_parallel(N, x_min, x_max, y_min, y_max, max_iter=100, n_workers=4
         parts = pool.map(_worker, chunks)
     return np.vstack(parts)
 
-    
+#Next ones are necessary for comparison in M3 MP2 of lecture5
+def mandelbrot_point(c, max_iter = 100):
+    z = 0j
+    for n in range(max_iter):
+        z = z**2 + c 
+        if abs(z) > 2:
+            return n    
+    return max_iter
+def compute_mandelbrot_naive(xmin, xmax, ymin, ymax, x_res, y_res, max_iter = 100):
+    x = np.linspace(xmin, xmax, x_res)
+    y = np.linspace(ymin, ymax, y_res)
+
+    iteration_num = np.zeros((y_res, x_res))
+
+    for i in range(y_res):
+        for j in range(x_res):
+            c = complex(x[j], y[i])
+            n = mandelbrot_point(c, max_iter)
+            iteration_num[i, j] = n
+    return iteration_num
+def compute_mandelbrot_numpy(C, max_iter = 100):
+    Z = np.zeros_like(C)
+    M = np.zeros(C.shape, dtype=int)
+    for i in range(max_iter):  
+        mask = np.abs(Z) <= 2
+        Z[mask] = Z[mask]**2 + C[mask]
+        M[mask] += 1
+    return M
+
 if __name__ == '__main__':
     
     #LECTURE 4:
@@ -177,7 +205,7 @@ if __name__ == '__main__':
     print(" chunks | time (s) | speedup Sp | LIF")
     print("-" * 55)
     
-    chunk_counts = [1, 2, 4, 8, 16, 32, 64, 128, 256, 512, 1024]
+    chunk_counts = [m * max_workers for m in [1, 2, 4, 8, 16]]
     
     max_speedup_l5 = 0
     best_chunks = 1
@@ -210,3 +238,47 @@ if __name__ == '__main__':
     
     print("-" * 55)
     print(f"\n=> OPTIMAL L5: {max_speedup_l5:.2f}x speedup using {best_chunks} chunks.")
+    
+    #Milestone 3
+    print("\n" + "="*55)
+    print("--- M3: Comprehensive Analysis (1024x1024) ---")
+    print("Implementation     | Time (s) | Speedup ")
+    print("-" * 55)
+    
+    #Naive
+    t_naive_times = []
+    for _ in range(3):
+        t0 = time.perf_counter()
+        compute_mandelbrot_naive(x_min, x_max, y_min, y_max, N, N, max_iter)
+        t_naive_times.append(time.perf_counter() - t0)
+    t_naive = statistics.median(t_naive_times)
+    print(f"Naive Python       | {t_naive:8.4f} | 1.00x")
+    
+    #Numpy
+    x = np.linspace(x_min, x_max, N)
+    y = np.linspace(y_min, y_max, N)
+    X, Y = np.meshgrid(x, y)
+    C = X + 1j * Y
+    t_numpy_times = []
+    for _ in range(3):
+        t0 = time.perf_counter()
+        compute_mandelbrot_numpy(C, max_iter)
+        t_numpy_times.append(time.perf_counter() - t0)
+    t_num = statistics.median(t_numpy_times)
+    print(f"NumPy Vectorized   | {t_num:8.4f} | {t_naive / t_num:8.2f}x")
+    
+    #Numba (@njit) --> (t_serial from earlier)
+    print(f"Numba (@njit)      | {t_serial:8.4f} | {t_naive / t_serial:8.2f}x")
+    
+    #Parallel (run using the best configuration found in M2)
+    with Pool(processes=max_workers) as pool:
+        pool.map(_worker, tiny_chunk) # Warm-up
+        t_opt_times = []
+        for _ in range(3):
+            t0 = time.perf_counter()
+            _ = mandelbrot_parallel(N, x_min, x_max, y_min, y_max, max_iter, 
+                                    n_workers=max_workers, n_chunks=best_chunks, pool=pool)
+            t_opt_times.append(time.perf_counter() - t0)
+    t_opt = statistics.median(t_opt_times)
+    print(f"Parallel (opt.)    | {t_opt:8.4f} | {t_naive / t_opt:8.2f}x")
+    print("-" * 55)
