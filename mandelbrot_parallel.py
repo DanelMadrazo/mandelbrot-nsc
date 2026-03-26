@@ -74,6 +74,11 @@ if __name__ == '__main__':
     max_speedup = 0
     best_p = 1
     
+    workers_list = []
+    speedup_list = []
+    
+    max_workers = os.cpu_count()
+    
     for n_workers in range(1, os.cpu_count() + 1):
 
         chunk_size = max(1, N // n_workers)
@@ -92,6 +97,10 @@ if __name__ == '__main__':
                 times.append(time.perf_counter() - t0)
         t_par = statistics.median(times)
         speedup = t_serial / t_par
+        
+        workers_list.append(n_workers)
+        speedup_list.append(speedup)
+        
         print(f"{n_workers:2d} workers: {t_par:.3f}s, speedup={speedup:.2f}x, eff={speedup/n_workers*100:.0f}%")
         
         if speedup > max_speedup:
@@ -106,4 +115,36 @@ if __name__ == '__main__':
         # back-solve implied serial fraction (s)
         s = (1 / max_speedup - 1 / best_p) / (1 - 1 / best_p)
         print(f"Implied serial fraction (s) = {s * 100:.2f}%")
+    
+    #SPEEDUP CURVES
+    plt.figure()
+    
+    #Measured speedup
+    plt.plot(workers_list, speedup_list, marker='o', linestyle='-', color='steelblue', label='Measured speedup')
+    
+    #Ideal speedup
+    plt.plot([1, max_workers], [1, max_workers], linestyle='--', color='lightgray', label='Ideal (linear)')
+    
+    #Logical cores vertical line
+    plt.axvline(x=max_workers, linestyle=':', color='red', alpha=0.5, label=f'Logical cores ({max_workers})')
+    
+    #Peak point
+    label_text = f"(peak: {max_speedup:.2f}x, {best_p} workers)"
+    
+    plt.annotate(
+        label_text,                       # Text
+        xy=(best_p, max_speedup),         # Coordinates of the point
+        xytext=(best_p - 1.5, max_speedup + 0.3), # Where to write the text           
+        bbox=dict(boxstyle='round,pad=0.3', fc='white', ec='black', lw=0.5), 
+        arrowprops=dict(arrowstyle='-', connectionstyle='arc3', color='black', alpha=0.5)
+    )
+    
+    plt.title(f'Parallel Mandelbrot speedup (N={N}, max_iter={max_iter}, 3 runs)')
+    plt.xlabel('Number of worker processes')
+    plt.ylabel('Speedup (relative to serial)')
+    plt.xticks(workers_list)
+    plt.grid(True, alpha=0.3)
+    plt.legend()
+    plt.tight_layout()
+    plt.show()
     
