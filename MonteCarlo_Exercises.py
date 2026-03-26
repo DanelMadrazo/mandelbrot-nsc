@@ -8,7 +8,8 @@ import math, random, time, statistics, os
 from multiprocessing import Pool
 import matplotlib.pyplot as plt
 from functools import reduce
-import dask, random, time, statistics
+from dask.distributed import Client, LocalCluster
+import dask
 from dask import delayed
 
 def estimate_pi_serial(num_samples):
@@ -173,4 +174,41 @@ if __name__ == '__main__':
     #dask.visualize(*tasks, filename='task_graph.png')
 
 
+    #EXERCISE2 - Lecture 6 - LocalCluster & Dashboard
+    total, n_chunks = 1_000_000, 8
+    samples = total // n_chunks
+    max_workers = os.cpu_count()
+    # Create local cluster; start with max workers -- scale() adjusts without restarting
+    cluster = LocalCluster(n_workers=max_workers, threads_per_worker=1)
+    client = Client(cluster)
+    print(f"Dashboard: {client.dashboard_link}")
+    # --> open the printed URL in your browser
+    input("Open the URL in your browser, look at the Task Stream tab, then press Enter...")
     
+    
+    # Rerun E1 tasks; LocalCluster scheduler takes over
+    print(f"\nRunning with {max_workers} workers...")
+    t0 = time.perf_counter()
+    tasks = [delayed(monte_carlo_chunk)(samples) for _ in range(n_chunks)]
+    results = dask.compute(*tasks)
+    t_dask_full = time.perf_counter() - t0
+    print(f"Time ({max_workers} workers): {t_dask_full:.3f}s | pi={4*sum(results)/total:.4f}")
+    
+    
+    # Vary n_workers: scale() resizes without restarting the scheduler
+    # (recreating LocalCluster while the browser is open breaks the dashboard)
+    half_workers = max(1, max_workers // 2)
+    print(f"\nScaling cluster down to {half_workers} workers...")
+    
+    cluster.scale(half_workers) 
+    #client.wait_for_workers(half_workers)
+    time.sleep(2) # Give Windows a moment to safely kill the processes
+    
+    t0 = time.perf_counter()
+    tasks = [delayed(monte_carlo_chunk)(samples) for _ in range(n_chunks)]
+    results = dask.compute(*tasks)
+    t_dask_scaled = time.perf_counter() - t0
+    print(f"Time ({half_workers} workers): {t_dask_scaled:.3f}s | pi={4*sum(results)/total:.4f}")
+    
+    client.close(); cluster.close()
+    cluster.close()
