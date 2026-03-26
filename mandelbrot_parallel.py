@@ -159,6 +159,7 @@ if __name__ == '__main__':
     plt.show()
     
     #LECTURE 5:
+    #Milestone 1
     print("\n" + "="*55)
     print("--- M1: Verification (n_chunks=32) ---")
     
@@ -169,3 +170,43 @@ if __name__ == '__main__':
         print('Yes, they are equal')
     else:
         print('No, there are differences')
+        
+    #Milestone 2
+    print("\n" + "="*55)
+    print(f"--- M2: Mandelbrot Granularity Sweep (Workers = {max_workers}) ---")
+    print(" chunks | time (s) | speedup Sp | LIF")
+    print("-" * 55)
+    
+    chunk_counts = [1, 2, 4, 8, 16, 32, 64, 128, 256, 512, 1024]
+    
+    max_speedup_l5 = 0
+    best_chunks = 1
+    speedups_l5 = []
+    
+    with Pool(processes=max_workers) as pool:
+        tiny_chunk = [(0, 8, N, x_min, x_max, y_min, y_max, max_iter)]
+        pool.map(_worker, tiny_chunk)
+        
+        for n_chunks in chunk_counts:
+            times_par = []
+            for _ in range(3):
+                t0 = time.perf_counter()
+                _ = mandelbrot_parallel(N, x_min, x_max, y_min, y_max, max_iter, 
+                                        n_workers=max_workers, n_chunks=n_chunks, pool=pool)
+                times_par.append(time.perf_counter() - t0)
+                
+            t_par = statistics.median(times_par)
+            speedup = t_serial / t_par
+            speedups_l5.append(speedup)
+            
+            # Calculate Load Imbalance Factor (LIF)
+            lif = max_workers * (t_par / t_serial) - 1
+            
+            print(f"{n_chunks:7d} | {t_par:8.4f} | {speedup:8.2f}x | {lif:5.2f}")
+            
+            if speedup > max_speedup_l5:
+                max_speedup_l5 = speedup
+                best_chunks = n_chunks
+    
+    print("-" * 55)
+    print(f"\n=> OPTIMAL L5: {max_speedup_l5:.2f}x speedup using {best_chunks} chunks.")
