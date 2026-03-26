@@ -4,11 +4,14 @@ Created on Thu Mar  5 15:56:56 2026
 Author : [ Danel Madrazo ]
 Course : Numerical Scientific Computing 2026
 """
-import numpy as np
+
 from numba import njit
 from multiprocessing import Pool
-import time, os, statistics
+import  os
 import matplotlib.pyplot as plt
+from dask import delayed
+from dask.distributed import Client, LocalCluster
+import dask, numpy as np, time, statistics 
 
 @njit(cache=True)
 def mandelbrot_pixel(c_real, c_imag, max_iter):
@@ -57,6 +60,17 @@ def mandelbrot_parallel(N, x_min, x_max, y_min, y_max, max_iter=100, n_workers=4
         parts = pool.map(_worker, chunks)
     return np.vstack(parts)
 
+def mandelbrot_dask(N, x_min, x_max, y_min, y_max,max_iter=100, n_chunks=32):
+    chunk_size = max(1, N // n_chunks)
+    tasks, row = [], 0
+    while row < N:
+        row_end = min(row + chunk_size, N)
+        tasks.append(delayed(mandelbrot_chunk)(row, row_end, N, x_min, x_max, y_min, y_max, max_iter))
+        row = row_end
+    parts = dask.compute(*tasks)
+    return np.vstack(parts)
+
+
 #Next ones are necessary for comparison in M3 MP2 of lecture5
 def mandelbrot_point(c, max_iter = 100):
     z = 0j
@@ -91,7 +105,7 @@ if __name__ == '__main__':
     #LECTURE 4:
         
     N, max_iter = 1024, 100
-    x_min, x_max, y_min, y_max = -2, 1, -1.5, 1.5
+    x_min, x_max, y_min, y_max = -2, 1, -1.25, 1.25
     
     # 1. Warm-up 
     _ = mandelbrot_serial(N, x_min, x_max, y_min, y_max, max_iter)
@@ -282,3 +296,34 @@ if __name__ == '__main__':
     t_opt = statistics.median(t_opt_times)
     print(f"Parallel (opt.)    | {t_opt:8.4f} | {t_naive / t_opt:8.2f}x")
     print("-" * 55)
+    
+    
+    #LECTURE 6:
+    
+    #Milestone 1
+    print("\n" + "="*55)
+    print("--- L6 M1: Dask Local Baseline (n_chunks=32) ---")
+    
+    cluster = LocalCluster(n_workers=max_workers, threads_per_worker=1)
+    client = Client(cluster)
+    print(f"Dask Dashboard URL: {client.dashboard_link}")
+    
+    print("Warming up Numba JIT on Dask workers...")
+    client.run(lambda: mandelbrot_chunk(0, 8, 8, x_min, x_max,y_min, y_max, 10))# warm up all workers
+    
+    print("Verifying Dask output...")
+    dask_result = mandelbrot_dask(N, x_min, x_max, y_min, y_max, max_iter, n_chunks=32)
+    
+    if np.array_equal(ref_result, dask_result):
+        print("Verification: Dask matches serial output! ✓")
+    else:
+        print("Verification: Dask differs from serial output! ✗")
+    
+    print("Running Dask baseline timing...")
+    times = []
+    for _ in range(3):
+        t0 = time.perf_counter()
+        result = mandelbrot_dask(N, x_min, x_max,y_min, y_max, max_iter)
+        times.append(time.perf_counter() - t0)
+    print(f"Dask local(n_chunks=32):{statistics.median(times):.3f}s")
+    client.close(); cluster.close()
