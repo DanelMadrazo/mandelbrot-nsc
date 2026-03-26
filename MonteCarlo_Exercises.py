@@ -8,6 +8,8 @@ import math, random, time, statistics, os
 from multiprocessing import Pool
 import matplotlib.pyplot as plt
 from functools import reduce
+import dask, random, time, statistics
+from dask import delayed
 
 def estimate_pi_serial(num_samples):
     inside_circle = 0
@@ -133,7 +135,7 @@ if __name__ == '__main__':
         print(f"{L:12d} | {t_ser:12.4f} | {t_par:12.4f} pi={pi:.4f}")
         
         
-    #EXERCISE2 - Parallel Computing part 2 - Map-Filter-Reduce
+    #EXERCISE2 - Parallel Computing part 2 (Lecture 5) - Map-Filter-Reduce
     N = 1_000_000
     data = [random.randint(10, 100) for _ in range(N)]
     
@@ -151,6 +153,24 @@ if __name__ == '__main__':
     print(f"Serial: {t_serial:.4f}s result={result_ser}")
     print(f"Parallel: {t_parallel:.4f}s result={result_par}")
     print(f"Speedup: {t_serial / t_parallel:.2f}x")
+    
+    #EXERCISE1 - Lecture 6 - Dask Delayed — Lazy Evaluation
+    total, n_chunks = 1_000_000, 8
+    samples = total // n_chunks # Serial baseline
+    t0 = time.perf_counter()
+    results = [monte_carlo_chunk(samples) for
+    _ in range(n_chunks)]
+    t_serial = time.perf_counter() - t0
+    print(f"Serial:{t_serial:.3f}s pi={4*sum(results)/total:.4f}")
+    # Dask delayed -- task graph is built, not executed yet
+    tasks = [delayed(monte_carlo_chunk)(samples) for
+    _ in range(n_chunks)]
+    t0 = time.perf_counter()
+    results = dask.compute(*tasks)
+    t_dask = time.perf_counter() - t0
+    print(f"Dask:{t_dask:.3f}s pi={4*sum(results)/total:.4f}")
+    # Visualise (requires: conda install python-graphviz)
+    #dask.visualize(*tasks, filename='task_graph.png')
 
 
     
