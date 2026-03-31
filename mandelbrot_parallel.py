@@ -104,7 +104,7 @@ if __name__ == '__main__':
     
     #LECTURE 4:
         
-    N, max_iter = 1024, 100
+    N, max_iter = 4096, 100
     x_min, x_max, y_min, y_max = -2, 1, -1.25, 1.25
     
     # 1. Warm-up 
@@ -327,3 +327,44 @@ if __name__ == '__main__':
         times.append(time.perf_counter() - t0)
     print(f"Dask local(n_chunks=32):{statistics.median(times):.3f}s")
     client.close(); cluster.close()
+    
+    #Milestone 2
+    print("\n" + "="*55)
+    print(f"--- L6 M2: Dask Chunk Size Sweep (Workers = {max_workers}) ---")
+    print(" n_chunks | time (s) | vs. 1x   | Speedup (vs Numba) ")
+    print("-" * 55)
+    
+    multipliers = [1, 2, 4, 8, 16]
+    chunk_counts_dask = [m * max_workers for m in multipliers]
+    
+    max_speedup_dask = 0
+    best_chunks_dask = 1
+    t_1x_dask = None
+    
+    for idx, n_chunks in enumerate(chunk_counts_dask):
+        times_par = []
+        for _ in range(3):
+            t0 = time.perf_counter()
+            _ = mandelbrot_dask(N, x_min, x_max, y_min, y_max, max_iter, n_chunks=n_chunks)
+            times_par.append(time.perf_counter() - t0)
+            
+        t_par = statistics.median(times_par)
+        speedup = t_serial / t_par # Comparing against pure Numba serial time
+        
+        # Calculate "vs. 1x" ratio for Dask
+        if idx == 0:
+            t_1x_dask = t_par
+            vs_1x_str = "baseline"
+        else:
+            vs_1x_str = f"{t_1x_dask / t_par:.1f}x"
+            
+        print(f"{multipliers[idx]:2d}x n_wkr | {t_par:8.4f} | {vs_1x_str:>8} | {speedup:8.2f}x")
+        
+        if speedup > max_speedup_dask:
+            max_speedup_dask = speedup
+            best_chunks_dask = n_chunks
+            t_opt_dask = t_par # Save the best time for M3
+      
+    print("-" * 55)
+    print(f"\n=> OPTIMAL DASK: {max_speedup_dask:.2f}x speedup using {best_chunks_dask} chunks.")
+    
