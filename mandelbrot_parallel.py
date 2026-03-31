@@ -299,7 +299,6 @@ if __name__ == '__main__':
     
     
     #LECTURE 6:
-    
     #Milestone 1
     print("\n" + "="*55)
     print("--- L6 M1: Dask Local Baseline (n_chunks=32) ---")
@@ -368,3 +367,22 @@ if __name__ == '__main__':
     print("-" * 55)
     print(f"\n=> OPTIMAL DASK: {max_speedup_dask:.2f}x speedup using {best_chunks_dask} chunks.")
     
+    # Milestone 3
+    print("\n" + "="*55)
+    print("--- L6 M3: Full Benchmark — All Implementations (4096x4096) ---")
+    print("Implementation     | Time (s) | Speedup ")
+    print("-" * 55)
+    
+    # Re-printing the saved times from earlier in the script
+    print(f"Naive Python       | {t_naive:8.4f} | 1.00x")
+    print(f"NumPy Vectorized   | {t_num:8.4f} | {t_naive / t_num:8.2f}x")
+    print(f"Numba (@njit)      | {t_serial:8.4f} | {t_naive / t_serial:8.2f}x")
+    print(f"Multiprocessing    | {t_opt:8.4f} | {t_naive / t_opt:8.2f}x")
+    
+    # Adding our new optimal Dask time
+    print(f"Dask Local    | {t_opt_dask:8.4f} | {t_naive / t_opt_dask:8.2f}x")
+    print("-" * 55)
+
+
+    client.close()
+    cluster.close()
