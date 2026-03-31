@@ -303,8 +303,9 @@ if __name__ == '__main__':
     print("\n" + "="*55)
     print("--- L6 M1: Dask Local Baseline (n_chunks=32) ---")
     
-    cluster = LocalCluster(n_workers=max_workers, threads_per_worker=1)
-    client = Client(cluster)
+    #cluster = LocalCluster(n_workers=max_workers, threads_per_worker=1)
+    #client = Client(cluster)
+    client = Client("tcp://10.92.0.90:8786")
     print(f"Dask Dashboard URL: {client.dashboard_link}")
     
     print("Warming up Numba JIT on Dask workers...")
@@ -325,7 +326,8 @@ if __name__ == '__main__':
         result = mandelbrot_dask(N, x_min, x_max,y_min, y_max, max_iter)
         times.append(time.perf_counter() - t0)
     print(f"Dask local(n_chunks=32):{statistics.median(times):.3f}s")
-    client.close(); cluster.close()
+    client.close() 
+    #cluster.close()
     
     #Milestone 2
     print("\n" + "="*55)
@@ -385,4 +387,4 @@ if __name__ == '__main__':
 
 
     client.close()
-    cluster.close()
+    #cluster.close()
