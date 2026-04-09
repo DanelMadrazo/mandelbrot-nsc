@@ -104,7 +104,7 @@ if __name__ == '__main__':
     
     #LECTURE 4:
         
-    N, max_iter = 4096, 100
+    N, max_iter = 1024, 100
     x_min, x_max, y_min, y_max = -2, 1, -1.25, 1.25
     
     # 1. Warm-up 
