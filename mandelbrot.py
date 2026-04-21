@@ -4,14 +4,36 @@ Author : [ Danel Madrazo ]
 Course : Numerical Scientific Computing 2026
 """
 import numpy as np
-import time , statistics
+import time 
+import statistics
 import matplotlib.pyplot as plt
 #import cProfile , pstats
 from numba import njit
 
 
 #STEP 2
-def mandelbrot_point(c, max_iter = 100):
+#MP3 Modification
+def mandelbrot_point(c: complex, max_iter: int = 100) -> int:
+    """
+    Calculates the escape iteration for a single complex point in the Mandelbrot set.
+
+    Iterates the function z_{n+1} = z_n^2 + c starting from z_0 = 0 
+    until the absolute value of z exceeds 2.0, or the maximum number 
+    of iterations is reached.
+
+    Parameters
+    ----------
+    c : complex
+        The complex coordinate to test for membership in the Mandelbrot set.
+    max_iter : int, optional
+        The maximum number of iterations to perform. Default is 100.
+
+    Returns
+    -------
+    int
+        The iteration count at which the point escaped (|z| > 2), 
+        or `max_iter` if it remained bounded.
+    """
     z = 0j
     for n in range(max_iter):
         z = z**2 + c 
@@ -108,10 +130,12 @@ if __name__ == "__main__":
     
     #L2 MILESTONE 3 
     def row_sums(N,A):
-        for i in range(N): s = np.sum(A[i, :])
+        for i in range(N): 
+            s = np.sum(A[i, :])
         return s
     def column_sums(N,A):
-        for j in range(N): s = np.sum(A[:, j])
+        for j in range(N): 
+            s = np.sum(A[:, j])
         return s   
     
     #Lecture 2, new time measurement function
@@ -235,7 +259,7 @@ if __name__ == "__main__":
     fig , axes = plt.subplots(1, 2, figsize =(12 , 4))
     for ax , result , title in zip(axes, [r32,r64], ['float32', 'float64 ( ref )']):
         ax.imshow(result, cmap ='hot')
-        ax.set_title(title); 
+        ax.set_title(title) 
         ax.axis ('off')
         
     #plt.savefig('precision_comparison.png', dpi = 150)
