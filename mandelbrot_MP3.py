@@ -61,4 +61,34 @@ plt.imshow(kappa, cmap = cmap_k, origin = 'lower', extent = [-0.7530, -0.7490, 0
 plt.colorbar(label=r'$\kappa(c)$ (log scale, $\kappa \geq 1$')
 plt.title(r'Condition number approx $\kappa(c) = |\Delta n|\, /\, (\varepsilon_{32}\, n(c))$')
 plt.show()
-        
+
+
+# ==========================================
+# L10 MILESTONE 3: GPU Benchmark Comparison
+# ==========================================
+
+time_seconds = {
+    "Naive Python": 9.0125,       
+    "NumPy Vectorizado": 2.2220,  
+    "Numba (MP1)": 0.0779,        
+    "Multiprocessing (MP2)": 0.0249,
+    "Dask Local": 0.1642,
+    "GPU OpenCL f32 (M1)": 0.005,
+    "GPU f64": 0.0
+    }
+names = [k for k, v in time_seconds.items() if v > 0.0]
+times = [v for k, v in time_seconds.items() if v > 0.0]
+
+plt.figure(figsize=(10, 6))
+plt.bar(names, times, log=True, color='#2c7bb6', edgecolor='black')
+
+plt.ylabel("Execution time in seconds (Logaritmic scale)")
+plt.title("Mandelbrot Benchmark (N=1024) - CPU vs GPU")
+plt.xticks(rotation=30, ha="right")
+plt.grid(axis='y', linestyle='--', alpha=0.7)
+for i, v in enumerate(times):
+    plt.text(i, v, f"{v:.4f}s", ha='center', va='bottom', fontsize=9, fontweight='bold')
+
+plt.tight_layout()
+plt.savefig("benchmark_mp3.png", dpi=150)
+plt.show()
